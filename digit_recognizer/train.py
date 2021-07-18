@@ -4,36 +4,43 @@ import os
 import sys
 import time
 
-import torch
-
-import dataloaders
 import models
+import torch
 import utils
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description="Training script for saliency masked.")
+    parser = argparse.ArgumentParser(description='Training script for MNIST')
     parser.add_argument('--exp_name', type=str, default='test', help='name of experiment')
-    parser.add_argument('--dataset', type=str, default='mnist', help='dataset', choices=['mnist', "fmnist", "fashion-mnist", "kmnist"])
     parser.add_argument('--directory', type=str, default='./data', help='path to dataset')
-    parser.add_argument('--model', type=str, default="feedforward", help='name of model to use', choices=['feedforward', 'convolutional', 'recurrent'])
+    parser.add_argument(
+        '--dataset',
+        type=str,
+        default='mnist',
+        help='dataset',
+        choices=['mnist', 'fmnist', 'fashion-mnist', 'kmnist'],
+    )
+    parser.add_argument(
+        '--model',
+        type=str,
+        default='convolutional',
+        help='type of model to use',
+        choices=['feedforward', 'convolutional', 'recurrent'],
+    )
     parser.add_argument('--lr', type=float, default=0.001, help='initial learning rate')
-    parser.add_argument('--batch_size', type=int, default=64, help='initial batch size')
+    parser.add_argument('--batch_size', type=int, default=128, help='initial batch size')
     parser.add_argument('--weight_decay', type=float, default=0.00005, help='weight decay')
     parser.add_argument('--epochs', type=int, default=10, help='total training epochs')
     parser.add_argument('--num_workers', type=int, default=4, help='for dataloader')
     parser.add_argument('--patience', type=int, default=3, help='patience before early stopping')
-    parser.add_argument("--no_save", action="store_true", help='do not save model')
-    parser.add_argument("--no_gpu", action="store_true", help='do not use gpu')
+    parser.add_argument('--no_save', action='store_true', help='do not save model')
+    parser.add_argument('--no_gpu', action='store_true', help='do not use gpu')
 
     args = parser.parse_args()
     return args
 
 
-def main():
-    # get args
-    args = get_args()
-
+def train_model(args):
     # setup directories
     path = os.path.join('saved_models', args.exp_name)
     if not os.path.exists(path):
@@ -55,19 +62,18 @@ def main():
     logger.info(f'Using device: {device}')
 
     # load model
-    model = models.get_model(args.model)
-    model.to(device)
-
-    # optimizer
+    model = models.get_model(args.model).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-
-    # loss
     criterion = torch.nn.CrossEntropyLoss()
 
     # dataloaders
     print('Loading dataloaders')
-    trainloader = dataloaders.get_dataloader(args.directory, args.dataset, args.batch_size, args.num_workers, True)
-    testloader = dataloaders.get_dataloader(args.directory, args.dataset, args.batch_size, args.num_workers, False)
+    trainloader = utils.get_dataloader(
+        args.directory, args.dataset, args.batch_size, args.num_workers, True
+    )
+    testloader = utils.get_dataloader(
+        args.directory, args.dataset, args.batch_size, args.num_workers, False
+    )
 
     start_epoch = 0
     best_acc = 0
@@ -90,25 +96,29 @@ def main():
         start_time = time.time()
         train_acc, train_loss = utils.train(model, trainloader, optimizer, criterion, device)
         train_time = time.time() - start_time
-        logger.info(f'Train | Accuracy: {train_acc:.2f}%, Loss: {train_loss:.4f}, Time: {train_time:.2f}s')
+        logger.info(
+            f'Train | Accuracy: {train_acc:.2f}%, Loss: {train_loss:.4f}, Time: {train_time:.2f}s'
+        )
 
         # test
         start_time = time.time()
         test_acc, test_loss = utils.test(model, testloader, criterion, device)
         test_time = time.time() - start_time
-        logger.info(f'Test  | Accuracy: {test_acc:.2f}%, Loss: {test_loss:.4f}, Time: {test_time:.2f}s')
+        logger.info(
+            f'Test  | Accuracy: {test_acc:.2f}%, Loss: {test_loss:.4f}, Time: {test_time:.2f}s'
+        )
 
         if test_acc > best_acc:
             best_acc = test_acc
             no_acc_change = 0
-            # save the model until the next improvement
+            # save the model
             if not args.no_save:
                 logger.info('Saving model')
                 save_dict = {
                     'state_dict': model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
                     'epoch': epoch,
-                    'best_acc': best_acc
+                    'best_acc': best_acc,
                 }
                 torch.save(save_dict, os.path.join(path, 'model.pt'))
         else:
@@ -117,17 +127,17 @@ def main():
         if no_acc_change >= args.patience:
             logger.info('Patience exhausted, early stopping')
             break
-    
+
     logger.info('\nFinished Training, final test using best model')
 
     # load best model
     if not args.no_save:
-       ckpt = torch.load(os.path.join(path, 'model.pt'))
-       model.load_state_dict(ckpt['state_dict'])
-       logger.info(f'Loaded saved best model from epoch {ckpt["epoch"]}')
+        ckpt = torch.load(os.path.join(path, 'model.pt'))
+        model.load_state_dict(ckpt['state_dict'])
+        logger.info(f'Loaded saved best model from epoch {ckpt["epoch"]}')
     else:
-       logger.info('No saved model found, using last epoch trained')
-    
+        logger.info('No saved model found, using last epoch trained')
+
     # test using best model
     start_time = time.time()
     test_acc, test_loss = utils.test(model, testloader, criterion, device)
@@ -136,4 +146,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    args = get_args()
+    train_model(args)

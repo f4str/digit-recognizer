@@ -9,7 +9,7 @@ class FeedForward(nn.Module):
         self.linear1 = nn.Linear(784, 512)
         self.linear2 = nn.Linear(512, 128)
         self.linear3 = nn.Linear(128, 10)
-    
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # flatten: 1@28x28 -> 784
         x = x.view(x.size(0), 784)
@@ -30,7 +30,7 @@ class Convolutional(nn.Module):
         self.fc1 = nn.Linear(512, 128)
         self.fc2 = nn.Linear(128, 64)
         self.fc3 = nn.Linear(64, 10)
-    
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # ensure shape: 1@28x28
         x = x.view(x.size(0), 1, 28, 28)
@@ -60,18 +60,20 @@ class Recurrent(nn.Module):
         self.num_layers = num_layers
         self.gru = nn.GRU(28, self.hidden_size, self.num_layers, batch_first=True)
         self.linear = nn.Linear(self.hidden_size, 10)
-    
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # init hidden state
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size, device=next(self.parameters()).device)
-        
+        h0 = torch.zeros(
+            self.num_layers, x.size(0), self.hidden_size, device=next(self.parameters()).device
+        )
+
         # reshape: 1@28x28 -> 28x28
         x = x.view(x.size(0), 28, 28)
         # gru: 28x28 -> 64x28 (x2)
         x, h = self.gru(x, h0)
         # linear: 64 -> 10
         x = self.linear(x[:, -1, :])
-        
+
         return x
 
 
