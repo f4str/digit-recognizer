@@ -10,7 +10,7 @@ import utils
 
 def get_args():
     parser = argparse.ArgumentParser(description='Testing script for MNIST')
-    parser.add_argument('--exp_name', type=str, default='test', help='name of experiment')
+    parser.add_argument('--name', type=str, required=True, help='name of the model')
     parser.add_argument('--directory', type=str, default='./data', help='path to dataset')
     parser.add_argument(
         '--dataset',
@@ -34,8 +34,11 @@ def get_args():
     return args
 
 
-def test_model(args):
+def main(args):
+    path = os.path.join('saved_models', args.name)
+
     print('Starting testing')
+
     print(f'Command: {sys.argv}')
     for arg, value in sorted(vars(args).items()):
         print(f'Argument {arg}: {value}')
@@ -53,7 +56,6 @@ def test_model(args):
         args.directory, args.dataset, args.batch_size, args.num_workers, False
     )
 
-    path = os.path.join('saved_models', args.exp_name)
     if os.path.exists(os.path.join(path, 'model.pt')):
         ckpt = torch.load(os.path.join(path, 'model.pt'))
         model.load_state_dict(ckpt['state_dict'])
@@ -71,4 +73,4 @@ def test_model(args):
 
 if __name__ == '__main__':
     args = get_args()
-    test_model(args)
+    main(args)

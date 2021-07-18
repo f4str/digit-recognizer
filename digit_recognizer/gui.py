@@ -1,4 +1,5 @@
 import argparse
+import io
 import os
 import sys
 import tkinter as tk
@@ -7,14 +8,15 @@ from PIL import Image
 import models
 import numpy as np
 import torch
+import torch.nn.functional as F
 
 
-class Recognizer:
-    def __init__(self, model):
+class GUI:
+    def __init__(self, model: torch.nn.Module):
         self.root = tk.Tk()
         self.root.title('Digit Recognizer')
         self.root.configure(background='black', padx=5)
-        self.root.resizable(0, 0)
+        self.root.resizable(False, False)
 
         self.predict_button = tk.Button(
             self.root,
@@ -78,17 +80,19 @@ class Recognizer:
         self.old_y = None
 
     def predict(self):
-        self.canvas.postscript(file='./data/tmp.ps', colormode='gray')
-        img = Image.open('./data/tmp.ps').resize((28, 28)).convert('L')
+        ps = self.canvas.postscript(colormode='gray')
+        img = Image.open(io.BytesIO(ps.encode('utf-8')))
 
-        data = np.array(img)
+        data = np.array(img.resize((28, 28)).convert('L'))
         data = (255 - data) / 255
         tensor = torch.tensor([data], dtype=torch.float32)
 
-        out = self.model(tensor)
-        pred = out.argmax(dim=1).squeeze().item()
+        with torch.no_grad():
+            out = self.model(tensor).squeeze()
+        prediction = torch.argmax(out).item()
+        confidence = int(F.softmax(out, dim=0)[prediction].item() * 100)
 
-        self.predict_label.config(text=str(pred))
+        self.predict_label.config(text=f'{prediction} ({confidence}%)')
 
     def clear(self):
         self.canvas.delete('all')
@@ -134,7 +138,7 @@ class Recognizer:
 
 def get_args():
     parser = argparse.ArgumentParser(description='Testing script for MNIST')
-    parser.add_argument('--exp_name', type=str, default='test', help='name of experiment')
+    parser.add_argument('--name', type=str, required=True, help='name of the model')
     parser.add_argument('--directory', type=str, default='./data', help='path to dataset')
     parser.add_argument(
         '--dataset',
@@ -155,11 +159,10 @@ def get_args():
     return args
 
 
-def load_model(model_name, exp_name):
-    # load model
+def load_model(model_name, name):
     model = models.get_model(model_name)
 
-    path = os.path.join('saved_models', exp_name)
+    path = os.path.join('saved_models', name)
     if os.path.exists(os.path.join(path, 'model.pt')):
         ckpt = torch.load(os.path.join(path, 'model.pt'))
         model.load_state_dict(ckpt['state_dict'])
@@ -170,11 +173,10 @@ def load_model(model_name, exp_name):
 
 
 if __name__ == '__main__':
-    # get args
     args = get_args()
     print('Loading model')
-    model = load_model(args.model, args.exp_name)
+    model = load_model(args.model, args.name)
 
     print('Opening canvas')
-    recognizer = Recognizer(model)
+    recognizer = GUI(model)
     recognizer.start()

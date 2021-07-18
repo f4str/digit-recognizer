@@ -11,7 +11,7 @@ import utils
 
 def get_args():
     parser = argparse.ArgumentParser(description='Training script for MNIST')
-    parser.add_argument('--exp_name', type=str, default='test', help='name of experiment')
+    parser.add_argument('--name', type=str, required=True, help='name of the model')
     parser.add_argument('--directory', type=str, default='./data', help='path to dataset')
     parser.add_argument(
         '--dataset',
@@ -40,9 +40,10 @@ def get_args():
     return args
 
 
-def train_model(args):
+def main(args):
+    path = os.path.join('saved_models', args.name)
+
     # setup directories
-    path = os.path.join('saved_models', args.exp_name)
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -147,4 +148,4 @@ def train_model(args):
 
 if __name__ == '__main__':
     args = get_args()
-    train_model(args)
+    main(args)

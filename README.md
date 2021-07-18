@@ -31,6 +31,40 @@ Install the dev dependencies using pip.
 pip install -e .[dev]
 ```
 
+## Usage
+
+### Model Training
+
+First train a model with the desired name and arguments.
+
+```bash
+python digit_recognizer/train.py --name {NAME} [...args]
+```
+
+This will create and train a model in `saved_models/{NAME}` based on the arguments provided. To view information on the available arguments, pass the `-h` flag.
+
+### Model Evaluation
+
+A trained model can be evaluated if desired. Ensure the name and arguments matches the saved model exactly.
+
+```bash
+python digit_recognizer/test.py --name {NAME} [...args]
+```
+
+To view information on the available arguments, pass the `-h` flag.
+
+### GUI Canvas
+
+Launch the GUI which will create a canvas to draw and recognize digits using the saved model. Ensure the name and arguments matches the saved model exactly.
+
+```bash
+python digit_recognizer/gui.py --name {NAME} [...args]
+```
+
+To view information on the available arguments, pass the `-h` flag.
+
+In the canvas, draw by clicking and holding left click. To erase any segment, click and hold right click. To clear the entire screen, click the clear button. After drawing a digit, click the predict button. A prediction will be displayed along with the confidence percentage.
+
 ## Testing
 
 The `tox` library is used to run all tests and code formatting. This is automatically installed with the dev requirements. The available options are as follows:
