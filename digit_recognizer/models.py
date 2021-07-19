@@ -4,14 +4,14 @@ import torch.nn.functional as F
 
 
 class FeedForward(nn.Module):
-    def __init__(self):
+    def __init__(self, num_classes=10):
         super().__init__()
         self.linear1 = nn.Linear(784, 512)
         self.linear2 = nn.Linear(512, 128)
-        self.linear3 = nn.Linear(128, 10)
+        self.linear3 = nn.Linear(128, num_classes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # flatten: 1@28x28 -> 784
+        # flatten: 784
         x = x.view(x.size(0), 784)
         # linear: 784 -> 512 + relu
         x = F.relu(self.linear1(x))
@@ -32,7 +32,7 @@ class Convolutional(nn.Module):
         self.fc3 = nn.Linear(64, 10)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # ensure shape: 1@28x28
+        # reshape: 1@28x28
         x = x.view(x.size(0), 1, 28, 28)
         # convolution: 1@28x28 -> 16@24x24 + relu
         x = F.relu(self.conv1(x))
@@ -67,13 +67,12 @@ class Recurrent(nn.Module):
             self.num_layers, x.size(0), self.hidden_size, device=next(self.parameters()).device
         )
 
-        # reshape: 1@28x28 -> 28x28
+        # reshape: 28x28
         x = x.view(x.size(0), 28, 28)
         # gru: 28x28 -> 64x28 (x2)
         x, h = self.gru(x, h0)
         # linear: 64 -> 10
         x = self.linear(x[:, -1, :])
-
         return x
 
 

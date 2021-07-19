@@ -17,7 +17,7 @@ def get_args():
         type=str,
         default='mnist',
         help='dataset',
-        choices=['mnist', 'fmnist', 'fashion-mnist', 'kmnist'],
+        choices=['mnist', 'qmnist'],
     )
     parser.add_argument(
         '--model',

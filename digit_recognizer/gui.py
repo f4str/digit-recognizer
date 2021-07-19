@@ -11,7 +11,7 @@ import torch
 import torch.nn.functional as F
 
 
-class GUI:
+class Canvas:
     def __init__(self, model: torch.nn.Module):
         self.root = tk.Tk()
         self.root.title('Digit Recognizer')
@@ -137,16 +137,8 @@ class GUI:
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description='Testing script for MNIST')
+    parser = argparse.ArgumentParser(description='GUI for testing MNIST')
     parser.add_argument('--name', type=str, required=True, help='name of the model')
-    parser.add_argument('--directory', type=str, default='./data', help='path to dataset')
-    parser.add_argument(
-        '--dataset',
-        type=str,
-        default='mnist',
-        help='dataset',
-        choices=['mnist', 'fmnist', 'fashion-mnist', 'kmnist'],
-    )
     parser.add_argument(
         '--model',
         type=str,
@@ -160,9 +152,9 @@ def get_args():
 
 
 def load_model(model_name, name):
+    path = os.path.join('saved_models', name)
     model = models.get_model(model_name)
 
-    path = os.path.join('saved_models', name)
     if os.path.exists(os.path.join(path, 'model.pt')):
         ckpt = torch.load(os.path.join(path, 'model.pt'))
         model.load_state_dict(ckpt['state_dict'])
@@ -178,5 +170,5 @@ if __name__ == '__main__':
     model = load_model(args.model, args.name)
 
     print('Opening canvas')
-    recognizer = GUI(model)
-    recognizer.start()
+    canvas = Canvas(model)
+    canvas.start()

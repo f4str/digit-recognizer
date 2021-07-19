@@ -18,7 +18,7 @@ def get_args():
         type=str,
         default='mnist',
         help='dataset',
-        choices=['mnist', 'fmnist', 'fashion-mnist', 'kmnist'],
+        choices=['mnist', 'qmnist'],
     )
     parser.add_argument(
         '--model',
@@ -55,6 +55,7 @@ def main(args):
     print(f'Logging to {os.path.join(path, "log.txt")}')
 
     logger.info('Starting training')
+
     logger.info(f'Command: {sys.argv}')
     for arg, value in sorted(vars(args).items()):
         logger.info(f'Argument {arg}: {value}')

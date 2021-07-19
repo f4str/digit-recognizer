@@ -12,12 +12,8 @@ def get_dataloader(
         dset = torchvision.datasets.MNIST(
             root=directory, train=train, download=True, transform=transform
         )
-    elif dataset in {'fmnist', 'fashion-mnist'}:
-        dset = torchvision.datasets.FashionMNIST(
-            root=directory, train=train, download=True, transform=transform
-        )
-    elif dataset == 'kmnist':
-        dset = torchvision.datasets.KMNIST(
+    elif dataset == 'qmnist':
+        dset = torchvision.datasets.QMNIST(
             root=directory, train=train, download=True, transform=transform
         )
     else:
@@ -30,9 +26,9 @@ def get_dataloader(
 def train(model, dataloader, optimizer, criterion, device):
     model.train()
 
+    total = 0
     acc_total = 0
     loss_total = 0
-    total = 0
 
     with tqdm(dataloader) as pbar:
         for images, labels in pbar:
@@ -43,13 +39,14 @@ def train(model, dataloader, optimizer, criterion, device):
             # forward pass
             outputs = model(images)
             loss = criterion(outputs, labels)
-            preds = outputs.argmax(dim=1).squeeze()
+            preds = outputs.argmax(dim=1)
             acc = (preds == labels).float().sum()
 
             # backwards pass
             loss.backward()
             optimizer.step()
 
+            # update metrics
             total += n
             acc_total += acc.item()
             loss_total += loss.item() * n
@@ -64,9 +61,9 @@ def train(model, dataloader, optimizer, criterion, device):
 def test(model, dataloader, criterion, device):
     model.eval()
 
+    total = 0
     acc_total = 0
     loss_total = 0
-    total = 0
 
     with tqdm(dataloader) as pbar, torch.no_grad():
         for images, labels in pbar:
@@ -76,9 +73,10 @@ def test(model, dataloader, criterion, device):
             # forward pass
             outputs = model(images)
             loss = criterion(outputs, labels)
-            preds = outputs.argmax(dim=1).squeeze()
+            preds = outputs.argmax(dim=1)
             acc = (preds == labels).float().sum()
 
+            # update metrics
             total += n
             acc_total += acc.item()
             loss_total += loss.item() * n
