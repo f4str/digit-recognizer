@@ -138,13 +138,14 @@ class Canvas:
 
 def get_args():
     parser = argparse.ArgumentParser(description='GUI for testing MNIST')
-    parser.add_argument('--name', type=str, required=True, help='name of the model')
+    parser.add_argument('--name', '-n', type=str, required=True, help='name of the model')
     parser.add_argument(
         '--model',
+        '-m',
         type=str,
         default='convolutional',
         help='type of model to use',
-        choices=['feedforward', 'convolutional', 'recurrent'],
+        choices=['feedforward', 'ffnn', 'convolutional', 'cnn', 'recurrent', 'rnn'],
     )
 
     args = parser.parse_args()
@@ -164,11 +165,15 @@ def load_model(model_name, name):
     return model
 
 
-if __name__ == '__main__':
-    args = get_args()
+def main(args):
     print('Loading model')
     model = load_model(args.model, args.name)
 
     print('Opening canvas')
     canvas = Canvas(model)
     canvas.start()
+
+
+if __name__ == '__main__':
+    args = get_args()
+    main(args)

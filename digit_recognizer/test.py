@@ -10,21 +10,22 @@ import utils
 
 def get_args():
     parser = argparse.ArgumentParser(description='Testing script for MNIST')
-    parser.add_argument('--name', type=str, required=True, help='name of the model')
+    parser.add_argument('--name', '-n', type=str, required=True, help='name of the model')
     parser.add_argument('--directory', type=str, default='./data', help='path to dataset')
     parser.add_argument(
         '--dataset',
         type=str,
         default='mnist',
-        help='dataset',
+        help='dataset to evaluate on',
         choices=['mnist', 'qmnist'],
     )
     parser.add_argument(
         '--model',
+        '-m',
         type=str,
         default='convolutional',
         help='type of model to use',
-        choices=['feedforward', 'convolutional', 'recurrent'],
+        choices=['feedforward', 'ffnn', 'convolutional', 'cnn', 'recurrent', 'rnn'],
     )
     parser.add_argument('--batch_size', type=int, default=128, help='initial batch size')
     parser.add_argument('--num_workers', type=int, default=4, help='for dataloader')
